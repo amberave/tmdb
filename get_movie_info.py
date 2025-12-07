@@ -15,13 +15,16 @@ def xl_to_dict(filename):
 
 if __name__ == "__main__":
     # set up API
-    tmdb.API_KEY = 'INSERT API KEY HERE'
+    with open("api_key.txt", 'r') as f:
+        api_key = f.read()
+    
+    tmdb.API_KEY = api_key
     tmdb.REQUESTS_TIMEOUT = 5  # seconds, for both connect and read
     tmdb.REQUESTS_SESSION = requests.Session()
     
     # get excel data to read and use for search
-    filename = "demo_data.xlsx"
-    movie_data = xl_to_dict("demo_data.xlsx")
+    filename = "test/demo_data.xlsx"
+    movie_data = xl_to_dict(filename)
     
     # search and retrieve movies
     for movie_dict in movie_data:
