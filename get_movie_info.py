@@ -50,9 +50,6 @@ if __name__ == "__main__":
             if credit["job"] == "Director":  
                 directors.append(credit["name"])
         movie_dict["Director"] = ''.join(directors)
-        
-        
-         
     
     output_df = pd.DataFrame(movie_data)
-    output_df.to_excel(f"output-{filename}", index=False) 
+    output_df.to_excel(f"{filename.replace('/', '/output-')}", index=False) 
