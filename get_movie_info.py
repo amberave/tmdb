@@ -2,9 +2,9 @@ import requests
 import tmdbsimple as tmdb
 import pandas as pd
 
-def search_movie(query):
+def search_movie(query, year):
     search = tmdb.Search()
-    response = search.movie(query=query)
+    response = search.movie(query=query, year=year)
     return search.results[0]["id"]
 
 def xl_to_dict(filename):
@@ -28,9 +28,10 @@ if __name__ == "__main__":
     
     # search and retrieve movies
     for movie_dict in movie_data:
+        # get movie info
+        # ENSURE BELOW IN SQUARE BRACKETS MATCH YOUR EXCEL
         print(f"{movie_dict['Movie Title']} {movie_dict['Year']}")
-        movie_id = search_movie(f"{movie_dict['Movie Title']}")
-        #print(movie_id)
+        movie_id = search_movie(movie_dict['Movie Title'], movie_dict['Year'])
         movie = tmdb.Movies(movie_id)
         response = movie.info()
         

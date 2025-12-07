@@ -10,4 +10,8 @@ python -m ensurepip --upgrade; pip install pillow; pip install tmdbsimple; pip i
 ```
 4. Login to [The Movie Database](https://www.themoviedb.org/settings/api).
 5. Scroll to the bottom of the API page and copy your API Key.
-6. Paste your API Key into [api_key.txt](api_key.txt).
+6. Create a file called `api_key.txt` in this folder and paste your API key into it. 
+
+## Running Script
+
+Run the script 
