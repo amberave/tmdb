@@ -14,4 +14,15 @@ python -m ensurepip --upgrade; pip install pillow; pip install tmdbsimple; pip i
 
 ## Running Script
 
-Run the script 
+Run the script by opening your terminal in the same folder as `get_movie_info.py` and pasting the below command:
+```
+python ./get_movie_info.py
+```
+
+For subsequent calls of this command, press the up arrow then Enter.
+
+## Troubleshooting
+
+For any troubleshooting: THINK.
+
+Then contact me if unsuccessful 😊
