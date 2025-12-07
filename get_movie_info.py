@@ -34,6 +34,8 @@ if __name__ == "__main__":
         movie_id = search_movie(movie_dict['Movie Title'], movie_dict['Year'])
         movie = tmdb.Movies(movie_id)
         response = movie.info()
+        print(response)
+        input("Stop")
         
         movie_dict["Runtime (minutes)"] = movie.runtime
         movie_dict["Budget"] = movie.budget
@@ -41,11 +43,15 @@ if __name__ == "__main__":
         movie_dict["Country of Origin"] = movie.origin_country[0]
 
         response = movie.releases()
+        print(response)
+        input("Stop")
         for c in movie.countries:
             if c['iso_3166_1'] == 'AU':
                 movie_dict["Classification"] = c['certification']
         
         response = movie.credits()
+        print(response)
+        input("Stop")
         directors = []  
         for credit in movie.crew:  
             if credit["job"] == "Director":  
