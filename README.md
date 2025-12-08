@@ -17,6 +17,7 @@ python -m ensurepip --upgrade; pip install pillow; pip install tmdbsimple; pip i
 Open the folder which contains `get_movie_info.py`.
 
 Start a command line by typing 'cmd' into the File Explorer address bar:
+
 ![Type cmd](assets/type_cmd.jpg)
 
 In the command line, paste the below command:
