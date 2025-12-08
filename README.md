@@ -14,10 +14,16 @@ python -m ensurepip --upgrade; pip install pillow; pip install tmdbsimple; pip i
 
 ## Running Script
 
-Run the script by opening your terminal in the same folder as `get_movie_info.py` and pasting the below command:
+Open the folder which contains `get_movie_info.py`.
+
+Start a command line by typing 'cmd' into the File Explorer address bar:
+![Type cmd](assets/type_cmd.jpg)
+
+In the command line, paste the below command:
 ```
 python ./get_movie_info.py
 ```
+Enter 'u' for **update** - continue from where program last left off - or enter 's' for **start** - program will restart from the very beginning, discarding any existing data. 
 
 For subsequent calls of this command, press the up arrow then Enter.
 
