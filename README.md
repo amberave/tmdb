@@ -21,6 +21,12 @@ python ./get_movie_info.py
 
 For subsequent calls of this command, press the up arrow then Enter.
 
+## Setting up environment
+
+```
+python -m venv venv\;venv/Scripts/activate;pip install -r requirements.txt
+```
+
 ## Troubleshooting
 
 For any troubleshooting: THINK.

@@ -1,5 +1,8 @@
 # my excluded
 api_key.txt
+*.xlsx
+*.json
+*errors.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
