@@ -17,82 +17,98 @@ def setup_apis():
 
     return tmdb
 
-def search_tmdb(query, year):
+def search_tmdb(query, year, medium):
     search = tmdb.Search()
-    response = search.movie(query=query, year=year)
+    response = search.tv(query=query, year=year) if medium in ['Documentary Mini Series', 'Mini Series'] else search.movie(query=query, year=year)
     try:
         return search.results[0]["id"]
     except:
         return None
 
-def retrieve_tmdb_data(movie_dict, tmdb_id):
-    # print("Info retrieved!")
-    movie = tmdb.Movies(tmdb_id)
+def retrieve_tmdb_data(movie_dict, tmdb_id, medium):
+    is_tv = medium in ['Documentary Mini Series', 'Mini Series']
+    item = tmdb.TV(tmdb_id) if is_tv else tmdb.Movies(tmdb_id)
 
-    response = movie.credits()
+    response = item.credits()
     directors = [] 
-    for credit in movie.crew:  
+    for credit in item.crew:  
         if credit["job"] == "Director":  
             directors.append(credit["name"])
     movie_dict["Director"] =     ', '.join(directors)
 
     # get basic movie info
-    response = movie.info()
-    movie_dict["Runtime (minutes)"] = movie.runtime
-    movie_dict["Budget"] = movie.budget
-    movie_dict["Box Office"] = movie.revenue
-    imdb_id = movie.imdb_id
-    movie_dict["Country of Origin"] = movie.origin_country[0]
-
-    # get classification
-    response = movie.releases()
-    for c in movie.countries:
-        if c['iso_3166_1'] == 'AU':
-            movie_dict["Classification"] = c['certification']
+    response = item.info()
     
-    # putting this last as IMDb data will be next columns
-    movie_dict["IMDb ID"] = imdb_id
+    if not is_tv:
+        movie_dict["Runtime (minutes)"] = item.runtime
+        movie_dict["Budget"] = item.budget
+        movie_dict["Box Office"] = item.revenue
+        imdb_id = item.imdb_id
+    
+    movie_dict["Country of Origin"] = ', '.join(item.origin_country)
+    movie_dict["Spoken Languages"] = ', '.join(country["english_name"] for country in item.spoken_languages)
+    
+    # get classification
+    if not is_tv:
+        response = item.releases()
+        for c in item.countries:
+            if c['iso_3166_1'] == 'AU':
+                movie_dict["Classification"] = c['certification']
+    
+        # putting this last as IMDb data will be next columns
+        movie_dict["IMDb ID"] = imdb_id
     
     return movie_dict
 
 def search_imdb(movie_dict):
     # Credit: https://imdbapi.dev/
-    imdb_id = movie_dict["IMDb ID"] if "IMDb ID" in movie_dict.keys() else None
+    imdb_data = {}
+    imdb_id = movie_dict["IMDb ID"] if "IMDb ID" in movie_dict.keys() and movie_dict["IMDb ID"] is not None else movie_dict["IMDb ID (from Letterboxd)"] if "IMDb ID (from Letterboxd)" in movie_dict.keys() else None
     if type(imdb_id) is not str:
-        return None, None
+        return imdb_data
     url = "https://api.imdbapi.dev/titles/" + imdb_id
 
     headers = {"accept": "application/xml"}
     try:
         response = requests.get(url, headers=headers, timeout=3)
-    except requests.exceptions.ReadTimeout:
-        return None, None
-    return response.status_code, response.json()
+    except Exception:
+        return imdb_data
+    
+    if response.status_code == 200:
+        imdb_response = response.json()
+        imdb_data["IMDb Rating"] = imdb_response["rating"]["aggregateRating"]
+        try:
+            imdb_data["Metascore"] = imdb_response["metacritic"]["score"]
+        except:
+            pass
+        imdb_data["Poster URL"] = imdb_response["primaryImage"]["url"]
 
-def scrape_rotten_tomatoes(title, year, full_cast:list):
+    return imdb_data
+
+def scrape_rotten_tomatoes(title, year, medium, full_cast:list):
     # Credit: https://github.com/placson/rottenmovies/blob/main/rotten.py
     rt_data = {} # write info to dict
     cleaned_title = ''.join([c if c.isalnum() else ' ' if c == ' ' or '.' else '' for c in str(title) ])
+    medium_type = ("tvSeries" if medium in ['Documentary Mini Series', 'Mini Series'] else "movie")
+    release_year_str = ("startyear" if medium in ['Documentary Mini Series', 'Mini Series'] else "release-year")
+
     MOVIE_SEARCH_URL = "https://www.rottentomatoes.com/search?search=%s" 
     movie_url = MOVIE_SEARCH_URL % cleaned_title
     
     response = requests.get(movie_url)
     rt_response_html = BeautifulSoup(response.content, 'html.parser')
-    movie_results = rt_response_html.find_all('search-page-result',type='movie')
+    movie_results = rt_response_html.find_all('search-page-result',type=medium_type)
     movie_results = BeautifulSoup(str(movie_results),'html.parser')
     movie_rows = movie_results.find_all('search-page-media-row')    
     for movie_row in movie_rows:
-        releaseYear = int(movie_row['release-year'])
+        releaseYear = int(movie_row[release_year_str]) if movie_row[release_year_str].isdigit() else None
+        if releaseYear is None:
+            continue
         href = movie_row.find('a',slot='title')
         rt_title = href.text.strip()
         cast = movie_row['cast']
-        # print(f"{year}: {releaseYear}")
-        # print(f"{title}: {rt_title}")
-        # print(f"{cast.split(',')}: {full_cast[:4]}")
-        # print(int(year) in range(releaseYear-1, releaseYear+2) and (rt_title == title or set(cast.split(',')).issubset(set(full_cast))))
         # allow for year to be one more/one less in case of inconsistencies
         if int(year) in range(releaseYear-1, releaseYear+2) and (rt_title == title or set(cast.split(',')).issubset(set(full_cast))):
-            
             # rt_data["Cast"] = cast
 
             # fetch details by going deeper into the exact movie link
@@ -124,11 +140,7 @@ def scrape_rotten_tomatoes(title, year, full_cast:list):
                 rt_data["Popcornmeter (Audience Score)"] = "Not Listed"
 
             # once film with correct title and year found, return its info
-            #print(f"Break: {cast}")
-            print(rt_data)
-
             return rt_data
-        #print(f"{rt_title} ({releaseYear})")
     return rt_data
 
 def get_letterboxd_user_ratings(username: str):
@@ -155,7 +167,6 @@ def get_letterboxd_movie_data(title: str, year, user_ratings: dict):
         # return letterboxd_data
     
     if not search_data["available"]:
-        print("Letterboxd data not available")
         return letterboxd_data
     
     for result in search_data["results"]:
@@ -167,11 +178,35 @@ def get_letterboxd_movie_data(title: str, year, user_ratings: dict):
     if slug:
         movie = Movie(slug)
         letterboxd_data["Letterboxd Average Rating"] = movie.rating
-        letterboxd_data["Cast (from Letterboxd)"] = ', '.join([entry["name"].replace(',', '') for entry in movie.cast])
-        letterboxd_data["Letterboxd My Rating"] = (user_ratings["movies"][slug]["rating"] if slug in user_ratings["movies"] else None) 
+        letterboxd_data["Letterboxd My Rating"] = (float(user_ratings["movies"][slug]["rating"])/2 if slug in user_ratings["movies"] and user_ratings["movies"][slug]["rating"] is not None else None) 
         letterboxd_data["Letterboxd Review Count"] = movie.pages.profile.script["aggregateRating"]["reviewCount"] 
         letterboxd_data["Letterboxd Rating Count"] = movie.pages.profile.script["aggregateRating"]["ratingCount"] 
-    print(letterboxd_data)
+        letterboxd_data["Cast (from Letterboxd)"] = ', '.join([entry["name"].replace(',', '') for entry in movie.cast])
+        letterboxd_data["Runtime (from Letterboxd)"] = movie.runtime
+        letterboxd_data["TMDB ID (from Letterboxd)"] = movie.tmdb_link.rsplit('/', 2)[1]
+        letterboxd_data["IMDb ID (from Letterboxd)"] = movie.imdb_link.rsplit('/', 2)[1]
 
     return letterboxd_data
     
+def get_oscars_data(imdb_id):
+    oscars_data = {}
+    award_url = "https://web-production-b8145.up.railway.app/awards/imdb/" + imdb_id
+    awards_response = requests.get(award_url)
+    if awards_response.status_code == 200:
+        awards_json = awards_response.json()
+        oscars_data["Academy Award Nominations"] = len(awards_json)
+        
+        num_wins = 0
+        nom_list = []
+        for nom in awards_json:
+            category = nom["category"]
+            nominees = ', '.join([entry["name"].replace(",", '').replace(";", '').replace(":", '') for entry in nom["names"]])
+            if nom["isWinner"] == "1": 
+                num_wins += 1
+                nom_list.append(f"{category}; {nominees}; Winner")
+            else:
+                nom_list.append(f"{category}; {nominees}; Nominee")
+        
+        oscars_data["Academy Award Wins"] = num_wins
+        oscars_data["Academy Award Details"] = ':'.join([str(details) for details in nom_list])
+    return oscars_data

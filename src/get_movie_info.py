@@ -2,7 +2,7 @@ import pandas as pd
 import json
 import requests
 from tqdm import tqdm
-from src.request_movie_site_data import setup_apis, search_tmdb, retrieve_tmdb_data, search_imdb, scrape_rotten_tomatoes, get_letterboxd_user_ratings, get_letterboxd_movie_data
+from src.request_movie_site_data import setup_apis, search_tmdb, retrieve_tmdb_data, search_imdb, scrape_rotten_tomatoes, get_letterboxd_user_ratings, get_letterboxd_movie_data, get_oscars_data
 
 def load_movie_data(filename):
     input_filename = "input/" + filename
@@ -51,6 +51,7 @@ def save_progress(filename, error_save_folder, movie_data, error_set):
         f.write(errors)
 
 
+
 def get_movie_info(filename):
     tmdb = setup_apis()
     movie_data = load_movie_data(filename)
@@ -58,18 +59,20 @@ def get_movie_info(filename):
     error_set = set()
     
     i = 0
-    marker_found = False
     # search and retrieve movies
     for movie_dict in tqdm(movie_data):
         movie_fields = movie_dict.keys()
-        # if "marker" not in movie_fields and not marker_found:
-        #     continue
-        # elif "marker" in movie_fields:
-        #     marker_found = True
-        #     movie_dict.pop("marker")
+        
+        def field_exists_and_valid(fieldname):
+            return fieldname in movie_fields and movie_dict[fieldname] is not None
+        
+        def is_missing_info(fields:list):
+            any_none_fields = any(movie_dict.get(key) is None for key in fields if key in movie_dict)
+            missing_fields = not all(key in movie_fields for key in fields)
+            return missing_fields or any_none_fields
 
         # if title or year missing, skip entry entirely
-        if ('Movie Title' or 'Year') not in movie_fields:
+        if is_missing_info(['Movie Title', 'Year']):
             error_set.add(f"Error: Entry needs both title and year to attempt data retrieval - {movie_dict})!")
             continue
         
@@ -78,65 +81,63 @@ def get_movie_info(filename):
         new_data = {}
         tmdb_id = ""
         
+        site_fields = [
+            'Director', 'Runtime (minutes)', 'Budget', 'Box Office', 'Country of Origin', 
+            'Spoken Languages', 'Classification', 'IMDb ID'
+        ]
+        #print(f"{title} ({year}): Missing fields from IMDb {is_missing_info(site_fields)}")
         # get TMDB data
-        # if ("Director" not in movie_fields) or type(movie_dict['Director']) is float:
-        #     # get tmdb info
-        #     tmdb_id = search_tmdb(title, year)
-        #     if tmdb_id:
-        #         movie_dict = retrieve_tmdb_data(movie_dict, tmdb_id)
-        #     else:
-        #         error_set.add(f"Error: TMDB - No info found for {title} ({year})!")
+        if is_missing_info(site_fields):
+            medium = movie_dict['Medium'] if field_exists_and_valid('Medium') else None
+            # get TMDB ID
+            if ("TMDB ID" not in movie_fields or movie_dict['TMDB ID'] is None):
+                tmdb_id = search_tmdb(title, year, medium)
+            else:
+                tmdb_id = movie_dict['TMDB ID']
+            # retrieve data from TMDB
+            if tmdb_id:
+                movie_dict = retrieve_tmdb_data(movie_dict, tmdb_id, medium)
+            else:
+                error_set.add(f"Error: TMDB - No info found for {title} ({year})!")
         
         # get IMDb data
-        # if ("IMDb Rating" not in movie_fields) or type(movie_dict['IMDb Rating']) is float:
-        #     status_code, response = search_imdb(movie_dict)
-        #     if status_code == 200:
-        #         new_data["IMDb Rating"] = response["rating"]["aggregateRating"]
-        #         try:
-        #             new_data["Metascore"] = response["metacritic"]["score"]
-        #         except:
-        #             pass
-        #         new_data["Poster URL"] = response["primaryImage"]["url"]
-        #     else:
-        #         error_set.add(f"Error: IMDB - No info found for {title} ({year})!")
+        site_fields = ['IMDb Rating', 'Metascore', 'Poster URL']
+        if is_missing_info(site_fields):
+            imdb_data = search_imdb(movie_dict)
+            if not imdb_data:
+                error_set.add(f"Error: IMDB - No info found for {title} ({year})!")
+            else:
+                new_data.update(imdb_data)
 
-        if ("Cast (from Letterboxd)" not in movie_fields) or movie_dict['Cast (from Letterboxd)'] is None:
-            print(f"{title}: {year} || Letterboxd")
+
+        # get IMDb data
+        site_fields = [
+            'Letterboxd Average Rating', 'Letterboxd My Rating', 'Letterboxd Review Count', 
+            'Letterboxd Rating Count', 'Cast (from Letterboxd)', 'Runtime (from Letterboxd)', 
+            'TMDB ID (from Letterboxd)', 'IMDb ID (from Letterboxd)'
+        ]
+        if is_missing_info(site_fields):
             letterboxd_data = get_letterboxd_movie_data(title, year, letterboxd_user_ratings)
             if not letterboxd_data:
                 error_set.add(f"Error: Letterboxd - No info found for {title} ({year})!")
             new_data.update(letterboxd_data)
         
         # get Rotten Tomatoes data
-        if ("Tomatometer (Critic Score)" not in movie_fields) or movie_dict['Tomatometer (Critic Score)'] is None:
-            print(f"{title}: {year} || Rotten Tomatoes")
-            full_cast = movie_dict['Cast (from Letterboxd)'].split(', ') if 'Cast (from Letterboxd)' in movie_fields else []
-            rt_data = scrape_rotten_tomatoes(title, year, full_cast)
+        site_fields = ['Tomatometer (Critic Score)', 'Popcornmeter (Audience Score)']
+        if is_missing_info(site_fields):
+            full_cast = movie_dict['Cast (from Letterboxd)'].split(', ') if 'Cast (from Letterboxd)' in movie_fields and movie_dict['Cast (from Letterboxd)'] is not None else []
+            rt_data = scrape_rotten_tomatoes(title, year, movie_dict['Medium'], full_cast)
             if not rt_data:
                 error_set.add(f"Error: Rotten Tomatoes - No info found for {title} ({year})!")
             new_data.update(rt_data)
         
         # https://github.com/mattgrosso/film-awards-api
-        if ('IMDb ID' in movie_fields) and type(movie_dict['IMDb ID']) is not float and movie_dict['IMDb ID'] is not None:
-            if "Academy Award Nominations" not in movie_fields or movie_dict["Academy Award Nominations"] is None or '(' in str(movie_dict["Academy Award Details"]):
-                award_url = "https://web-production-b8145.up.railway.app/awards/imdb/" + movie_dict['IMDb ID']
-                awards_response = requests.get(award_url)
-                if awards_response.status_code == 200:
-                    awards_json = awards_response.json()
-                    new_data["Academy Award Nominations"] = len(awards_json)
-                    num_wins = 0
-                    nom_list = []
-                    for nom in awards_json:
-                        category = nom["category"]
-                        nominees = ', '.join([entry["name"].replace(",", '').replace(";", '').replace(":", '') for entry in nom["names"]])
-                        if nom["isWinner"] == "1": 
-                            num_wins += 1
-                            nom_list.append(f"{category}; {nominees}; Winner")
-                        else:
-                            nom_list.append(f"{category}; {nominees}; Nominee")
-                    new_data["Academy Award Wins"] = num_wins
-                    new_data["Academy Award Details"] = ':'.join([str(details) for details in nom_list])
-                else:
+        imdb_id = movie_dict['IMDb ID'] if field_exists_and_valid('IMDb ID') else movie_dict['IMDb ID (from Letterboxd)'] if field_exists_and_valid('IMDb ID (from Letterboxd)') else None
+        if imdb_id is not None:
+            site_fields = ["Academy Award Nominations", 'Academy Award Wins', 'Academy Award Details']
+            if is_missing_info(site_fields):
+                oscars_data = get_oscars_data(imdb_id)
+                if not oscars_data:
                     new_data["Academy Award Nominations"] = 0
                     new_data["Academy Award Wins"] = 0
                     error_set.add(f"Error: Academy Awards - No info found for {title} ({year})!")
@@ -144,13 +145,12 @@ def get_movie_info(filename):
         # add all the details, then ratings, then cast and poster url
         priority_fields = [
             'Director', 'Runtime (minutes)', 'Budget', 'Box Office', 
-            'Country of Origin', 'Classification', 'IMDb ID', 'IMDb Rating',
+            'Country of Origin', 'Spoken Languages', 'Classification', 'IMDb ID', 'IMDb Rating',
             'Metascore', 'Tomatometer (Critic Score)', 'Popcornmeter (Audience Score)',
             'Letterboxd Average Rating', 'Letterboxd My Rating', 'Academy Award Nominations',
             'Academy Award Wins', 'Academy Award Details'
         ]
         if new_data:
-            print(f"\n{title} ({year}): {new_data}")
             i += 1
         
         for k in list(new_data.keys()):
