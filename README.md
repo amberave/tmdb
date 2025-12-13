@@ -44,7 +44,7 @@ For subsequent calls of this command, press the up arrow then Enter.
 
 ### Output Data
 
-The output data will be saved to 'output-[filename]' where 'filename' is the original filename. There will also be an errors log 
+The output data will be saved to the 'output' folder under the name 'output-[filename].xlsx' where 'filename' is the original filename. There will also be an errors log named 'output-[filename]_errors.txt' which will show the title and year along with the site where data retrieval failed. 
 
 ## Data Details:
 
