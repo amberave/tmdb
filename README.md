@@ -60,8 +60,8 @@ The output data will be saved to the 'output' folder under the name 'output-[fil
 |IMDb ID| This is used in other database searches, primarily Academy Award data|
 | **Fields from IMDb** ||
 | IMDb Rating| |
-| Metascore| |
-| Poster URL| URL to a good quality poster|
+| Metascore| If page exists but no score is given, value is "Not Listed". If no page exists, value is blank.|
+| Poster URL| URL to a good quality poster.|
 | **Fields from Letterboxd** ||
 | Letterboxd My Rating| This is your Letterboxd rating. If you have logged the film on Letterboxd, value is "Not Rated", if you have not interacted with it on Letterboxd, value is blank. *Note: if you watch a film marked "Not Rated", this program will not update that field. Either remove "Not Rated" (and program will pull rating from Letterboxd) or manually put your rating into field.*|
 | Letterboxd Average Rating| Average Letterboxd rating retrieved from Letterboxd to 2 decimal places (e.g. 4.35). Not sure exactly how they calculate it on Letterboxd, there is no consistent rounding |
