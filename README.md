@@ -62,9 +62,6 @@ The output data will be saved to 'output-[filename]' where 'filename' is the ori
 | IMDb Rating| |
 | Metascore| |
 | Poster URL| URL to a good quality poster|
-| **Fields from Rotten Tomatoes** | Films are retrieved based on logic: year matches (with 1 year difference allowance) AND (title is exact match OR top 3 cast from RT search are all in Letterboxd cast list). This means if title is not exact match (or has non alphanumeric characters) and a top-billed cast member has a different name (e.g. Christopher Sanders vs Chris Sanders) then result will not be retrieved.
-| Tomatometer (Critic Score)| Out of 100. If page exists but no score is given, value is "Not Listed". If no page exists, value is blank. |
-| Popcornmeter (Audience Score)| Out of 100. If page exists but no score is given, value is "Not Listed". If no page exists, value is blank.|
 | **Fields from Letterboxd** ||
 | Letterboxd My Rating| This is your Letterboxd rating. If you have logged the film on Letterboxd, value is "Not Rated", if you have not interacted with it on Letterboxd, value is blank. *Note: if you watch a film marked "Not Rated", this program will not update that field. Either remove "Not Rated" (and program will pull rating from Letterboxd) or manually put your rating into field.*|
 | Letterboxd Average Rating| Average Letterboxd rating retrieved from Letterboxd to 2 decimal places (e.g. 4.35). Not sure exactly how they calculate it on Letterboxd, there is no consistent rounding |
@@ -75,6 +72,9 @@ The output data will be saved to 'output-[filename]' where 'filename' is the ori
 | Runtime (from Letterboxd)| In minutes. TV shows (e.g. Mini Series) do not have runtime data on TMDB but do have data on Letterboxd. This should supplement any missing data in column 'Runtime (minutes)'.
 | TMDB ID (from Letterboxd)| Can be used to get TMDB data directly if there are any issues searching. |
 | IMDb ID (from Letterboxd)| Backup for 'IMDb ID' column if TMDB search did not retrieve IMDb ID |
+| **Fields from Rotten Tomatoes** | Films are retrieved based on logic: year matches (with 1 year difference allowance) AND (title is exact match OR top 3 cast from RT search are all in Letterboxd cast list). This means if title is not exact match (or has non alphanumeric characters) and a top-billed cast member has a different name (e.g. Christopher Sanders vs Chris Sanders) then result will not be retrieved.
+| Tomatometer (Critic Score)| Out of 100. If page exists but no score is given, value is "Not Listed". If no page exists, value is blank. |
+| Popcornmeter (Audience Score)| Out of 100. If page exists but no score is given, value is "Not Listed". If no page exists, value is blank.|
 | **Fields from Academy Awards Database** ||
 | Academy Award Nominations| *Number* |
 | Academy Award Wins| *Number*|
