@@ -58,7 +58,7 @@ The output data will be saved to the 'output' folder under the name 'output-[fil
 | Country of Origin| If a list, comma-space separated (', ')|
 | Classification| Australian classification. If Aus classification unavailable, US classification will be added with '(US)' after. (e.g. Aus classification: 'G', US classification: 'G (US)')|
 |IMDb ID| This is used in other database searches, primarily Academy Award data|
-| **Fields from IMDb** |
+| **Fields from IMDb** | |
 | IMDb Rating| |
 | Metascore| If page exists but no score is given, value is "Not Listed". If no page exists, value is blank.|
 | Poster URL| URL to a good quality poster.|

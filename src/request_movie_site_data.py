@@ -48,6 +48,7 @@ def retrieve_tmdb_data(movie_dict, tmdb_id, medium):
         movie_dict["Budget"] = item.budget
         movie_dict["Box Office"] = item.revenue
         imdb_id = item.imdb_id
+        movie_dict["Franchise"] = item.belongs_to_collection["name"].replace(' Collection', '') if item.belongs_to_collection is not None and movie_dict["Franchise"] is None else movie_dict["Franchise"]
     
     movie_dict["Country of Origin"] = ', '.join(item.origin_country)
     movie_dict["Spoken Languages"] = ', '.join(country["english_name"] for country in item.spoken_languages)
