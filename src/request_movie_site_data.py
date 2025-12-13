@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import json
+from datetime import datetime
 import tmdbsimple as tmdb
 from letterboxdpy.user import User
 from letterboxdpy.movie import Movie
@@ -29,7 +30,10 @@ def retrieve_tmdb_data(movie_dict, tmdb_id, medium):
     is_tv = medium in ['Documentary Mini Series', 'Mini Series']
     item = tmdb.TV(tmdb_id) if is_tv else tmdb.Movies(tmdb_id)
 
-    response = item.credits()
+    try:
+        response = item.credits()
+    except:
+        return movie_dict
     directors = [] 
     for credit in item.crew:  
         if credit["job"] == "Director":  
@@ -51,10 +55,17 @@ def retrieve_tmdb_data(movie_dict, tmdb_id, medium):
     # get classification
     if not is_tv:
         response = item.releases()
+        # tries to retrieve AUS classification, but will return US class if AUS not found
+        us_class = ''
+        aus_class = ''
         for c in item.countries:
             if c['iso_3166_1'] == 'AU':
-                movie_dict["Classification"] = c['certification']
-    
+                aus_class = c['certification']
+                break
+            if c['iso_3166_1'] == 'US':
+                us_class = c['certification']
+        movie_dict["Classification"] = aus_class if aus_class != '' else f"{us_class} (US)" if us_class != '' else None
+
         # putting this last as IMDb data will be next columns
         movie_dict["IMDb ID"] = imdb_id
     
@@ -178,7 +189,8 @@ def get_letterboxd_movie_data(title: str, year, user_ratings: dict):
     if slug:
         movie = Movie(slug)
         letterboxd_data["Letterboxd Average Rating"] = movie.rating
-        letterboxd_data["Letterboxd My Rating"] = (float(user_ratings["movies"][slug]["rating"])/2 if slug in user_ratings["movies"] and user_ratings["movies"][slug]["rating"] is not None else None) 
+        movie_logged = slug in user_ratings["movies"]
+        letterboxd_data["Letterboxd My Rating"] = (float(user_ratings["movies"][slug]["rating"])/2 if movie_logged and user_ratings["movies"][slug]["rating"] is not None else "Not Rated" if movie_logged else None) 
         letterboxd_data["Letterboxd Review Count"] = movie.pages.profile.script["aggregateRating"]["reviewCount"] 
         letterboxd_data["Letterboxd Rating Count"] = movie.pages.profile.script["aggregateRating"]["ratingCount"] 
         letterboxd_data["Cast (from Letterboxd)"] = ', '.join([entry["name"].replace(',', '') for entry in movie.cast])
@@ -188,7 +200,7 @@ def get_letterboxd_movie_data(title: str, year, user_ratings: dict):
 
     return letterboxd_data
     
-def get_oscars_data(imdb_id):
+def get_oscars_data(imdb_id, year):
     oscars_data = {}
     award_url = "https://web-production-b8145.up.railway.app/awards/imdb/" + imdb_id
     awards_response = requests.get(award_url)
@@ -209,4 +221,15 @@ def get_oscars_data(imdb_id):
         
         oscars_data["Academy Award Wins"] = num_wins
         oscars_data["Academy Award Details"] = ':'.join([str(details) for details in nom_list])
+
+    # if no details retrieved, movie probably did not get nominated
+    if not oscars_data:
+        oscars_data["Academy Award Nominations"] = 0
+        oscars_data["Academy Award Wins"] = 0
+    
+        # if movie was released more than 2 yrs ago, it will not receive any awards
+        # fill these with empty string so program skips them next time
+        if year < datetime.now().year - 2:
+            oscars_data["Academy Award Details"] = ''
+
     return oscars_data

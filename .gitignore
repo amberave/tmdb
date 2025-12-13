@@ -3,6 +3,7 @@ api_key.txt
 *.xlsx
 *.json
 *errors.txt
+*errors - Copy.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

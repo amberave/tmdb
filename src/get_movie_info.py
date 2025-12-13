@@ -85,15 +85,14 @@ def get_movie_info(filename):
             'Director', 'Runtime (minutes)', 'Budget', 'Box Office', 'Country of Origin', 
             'Spoken Languages', 'Classification', 'IMDb ID'
         ]
-        #print(f"{title} ({year}): Missing fields from IMDb {is_missing_info(site_fields)}")
         # get TMDB data
         if is_missing_info(site_fields):
             medium = movie_dict['Medium'] if field_exists_and_valid('Medium') else None
             # get TMDB ID
-            if ("TMDB ID" not in movie_fields or movie_dict['TMDB ID'] is None):
-                tmdb_id = search_tmdb(title, year, medium)
+            if field_exists_and_valid('TMDB ID (from Letterboxd)'):
+                tmdb_id = movie_dict['TMDB ID (from Letterboxd)']
             else:
-                tmdb_id = movie_dict['TMDB ID']
+                tmdb_id = search_tmdb(title, year, medium)
             # retrieve data from TMDB
             if tmdb_id:
                 movie_dict = retrieve_tmdb_data(movie_dict, tmdb_id, medium)
@@ -110,7 +109,7 @@ def get_movie_info(filename):
                 new_data.update(imdb_data)
 
 
-        # get IMDb data
+        # get Letterboxd data
         site_fields = [
             'Letterboxd Average Rating', 'Letterboxd My Rating', 'Letterboxd Review Count', 
             'Letterboxd Rating Count', 'Cast (from Letterboxd)', 'Runtime (from Letterboxd)', 
@@ -131,16 +130,17 @@ def get_movie_info(filename):
                 error_set.add(f"Error: Rotten Tomatoes - No info found for {title} ({year})!")
             new_data.update(rt_data)
         
+        # Get Awards data
         # https://github.com/mattgrosso/film-awards-api
         imdb_id = movie_dict['IMDb ID'] if field_exists_and_valid('IMDb ID') else movie_dict['IMDb ID (from Letterboxd)'] if field_exists_and_valid('IMDb ID (from Letterboxd)') else None
         if imdb_id is not None:
             site_fields = ["Academy Award Nominations", 'Academy Award Wins', 'Academy Award Details']
             if is_missing_info(site_fields):
-                oscars_data = get_oscars_data(imdb_id)
+                oscars_data = get_oscars_data(imdb_id, year)
                 if not oscars_data:
-                    new_data["Academy Award Nominations"] = 0
-                    new_data["Academy Award Wins"] = 0
                     error_set.add(f"Error: Academy Awards - No info found for {title} ({year})!")
+                else:
+                    new_data.update(oscars_data)
 
         # add all the details, then ratings, then cast and poster url
         priority_fields = [
