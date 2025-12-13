@@ -55,6 +55,8 @@ def save_progress(filename, error_save_folder, movie_data, error_set):
 def get_movie_info(filename):
     tmdb = setup_apis()
     movie_data = load_movie_data(filename)
+    skip_checked_entries_input = input("Input 'c' to check all entries for new site data, else press Enter to skip to newly added rows (s)? ")
+    skip_checked_entries = False if skip_checked_entries_input == 'c' else True
     letterboxd_user_ratings = get_letterboxd_user_ratings("DWynter10")
     error_set = set()
     
@@ -81,6 +83,10 @@ def get_movie_info(filename):
         new_data = {}
         tmdb_id = ""
         
+        # Letterboxd is most reliable site for getting info, best one to skip on
+        if not is_missing_info(['Runtime (from Letterboxd)']) and skip_checked_entries:
+            continue
+        
         site_fields = [
             'Director', 'Runtime (minutes)', 'Budget', 'Box Office', 'Country of Origin', 
             'Spoken Languages', 'Classification', 'IMDb ID'
@@ -98,16 +104,6 @@ def get_movie_info(filename):
                 movie_dict = retrieve_tmdb_data(movie_dict, tmdb_id, medium)
             else:
                 error_set.add(f"Error: TMDB - No info found for {title} ({year})!")
-        
-        # get IMDb data
-        site_fields = ['IMDb Rating', 'Metascore', 'Poster URL']
-        if is_missing_info(site_fields):
-            imdb_data = search_imdb(movie_dict)
-            if not imdb_data:
-                error_set.add(f"Error: IMDB - No info found for {title} ({year})!")
-            else:
-                new_data.update(imdb_data)
-
 
         # get Letterboxd data
         site_fields = [
@@ -120,6 +116,15 @@ def get_movie_info(filename):
             if not letterboxd_data:
                 error_set.add(f"Error: Letterboxd - No info found for {title} ({year})!")
             new_data.update(letterboxd_data)
+        
+        # get IMDb data
+        site_fields = ['IMDb Rating', 'Metascore', 'Poster URL']
+        if is_missing_info(site_fields):
+            imdb_data = search_imdb(movie_dict)
+            if not imdb_data:
+                error_set.add(f"Error: IMDB - No info found for {title} ({year})!")
+            else:
+                movie_dict.update(imdb_data)
         
         # get Rotten Tomatoes data
         site_fields = ['Tomatometer (Critic Score)', 'Popcornmeter (Audience Score)']

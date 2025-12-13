@@ -91,7 +91,8 @@ def search_imdb(movie_dict):
         try:
             imdb_data["Metascore"] = imdb_response["metacritic"]["score"]
         except:
-            pass
+            # if not present, no entry on Metacritic
+            imdb_data["Metascore"] = "Not Listed"
         imdb_data["Poster URL"] = imdb_response["primaryImage"]["url"]
 
     return imdb_data
