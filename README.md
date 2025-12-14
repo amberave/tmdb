@@ -73,7 +73,7 @@ The output data will be saved to the 'output' folder under the name 'output-[fil
 | Runtime (from Letterboxd)| In minutes. TV shows (e.g. Mini Series) do not have runtime data on TMDB but do have data on Letterboxd. This should supplement any missing data in column 'Runtime (minutes)'.
 | TMDB ID (from Letterboxd)| Can be used to get TMDB data directly if there are any issues searching. |
 | IMDb ID (from Letterboxd)| Backup for 'IMDb ID' column if TMDB search did not retrieve IMDb ID |
-| Letterboxd Slug | |
+| Letterboxd Slug | Letterboxd searches using this. This is also used to pull latest data from Letterboxd; if a slug is not already in the data, program adds it. (e.g. Slug for V for Vendetta is 'v-for-vendetta')|
 | **Fields from Rotten Tomatoes** | Films are retrieved based on logic: year matches (with 1 year difference allowance) AND (title is exact match OR top 3 cast from RT search are all in Letterboxd cast list). This means if title is not exact match (or has non alphanumeric characters) and a top-billed cast member has a different name (e.g. Christopher Sanders vs Chris Sanders) then result will not be retrieved.
 | Tomatometer (Critic Score)| Out of 100. If page exists but no score is given, value is "Not Listed". If no page exists, value is blank. |
 | Popcornmeter (Audience Score)| Out of 100. If page exists but no score is given, value is "Not Listed". If no page exists, value is blank.|

@@ -175,12 +175,8 @@ def get_letterboxd_movie_data(title: str, year, user_ratings: dict, slug=None):
 
     if slug is None:
         search_instance = Search(str(title).replace('/', ' '), "films")
-        #try:
         search_data = search_instance.results
-        #except Exception as e:
-        
-            # return letterboxd_data
-        
+
         if not search_data["available"]:
             return letterboxd_data
         
@@ -192,7 +188,6 @@ def get_letterboxd_movie_data(title: str, year, user_ratings: dict, slug=None):
 
     if slug:
         movie = Movie(slug)
-        letterboxd_data["Letterboxd Slug"] = slug
         letterboxd_data["Letterboxd Average Rating"] = movie.rating
         movie_logged = slug in user_ratings["movies"]
         letterboxd_data["Letterboxd My Rating"] = (float(user_ratings["movies"][slug]["rating"])/2 if movie_logged and user_ratings["movies"][slug]["rating"] is not None else "Not Rated" if movie_logged else None) 
