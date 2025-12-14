@@ -37,13 +37,11 @@ You will be asked to input a character:
 | 'u' | **Update** - continue from where program last left off |
 | 's' | **Start** - program will restart from the very beginning, discarding any existing data.|
 
-
 You will be asked to input another character:
 
 | Input | Meaning |
 |--|--|
 | 'c' | Run the program over all values and attempt to fill any blank fields |
-| 'l' | Pull latest data from Letterboxd
 | Enter (nothing) | Skip all filled-in rows and only fill most recently added rows (with no program-generated data). |
 
 For subsequent calls of this command, press the up arrow then Enter.
