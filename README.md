@@ -12,12 +12,12 @@ git clone https://github.com/amberave/tmdb.git;cd tmdb;python -m venv venv\;venv
 ```
 1. Login to [The Movie Database](https://www.themoviedb.org/settings/api).
 2. Scroll to the bottom of the [API page](https://www.themoviedb.org/settings/api) and copy your API Key.
-3. Create a file called `api_key.txt` in this folder and paste your API key into it. 
+3. Create a file called `api_key.txt` in this folder (`tmdb`) and paste your API key into it. 
 
 ## Usage
 
 ### Source Data
-Ensure you have placed an Excel file in the ['input' folder](input/). The program will try and load "movies_database.xlsx". If your file is not named this, you can rename it to "movies_database.xlsx" or change the value "filename" in [main.py](main.py).
+Ensure you have placed an Excel file in the `input` folder. The program will try and load `movies_database.xlsx`. If your file is not named this, you can rename it to `movies_database.xlsx` or change the value `filename` in `[main.py](main.py)`.
 
 ### Running Programs
 Open the folder which contains `get_movie_info.py`.
@@ -48,7 +48,7 @@ For subsequent calls of this command, press the up arrow then Enter.
 
 ### Output Data
 
-The output data will be saved to the 'output' folder under the name `output-[filename].xlsx` where 'filename' is the original filename. There will also be an errors log named `output-[filename]_errors.txt` which will show the title and year along with the site where data retrieval failed. 
+The output data will be saved to the `output` folder under the name `output-[filename].xlsx` where 'filename' is the original filename. There will also be an errors log named `output-[filename]_errors.txt` which will show the title and year along with the site where data retrieval failed. 
 
 ## Data Details:
 
