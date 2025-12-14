@@ -2,6 +2,11 @@
 
 ## Installation
 
+Navigate to the folder where you want the program saved, start a command line by typing 'cmd' + Enter into the File Explorer address bar:
+
+<img src="assets/type_cmd.jpg" alt="Type 'cmd' to open command prompt" width="300" height="200">
+
+In the command line, paste the below command:
 ```
 git clone https://github.com/amberave/tmdb.git;cd tmdb;python -m venv venv\;venv\Scripts\activate;pip install -r requirements.txt
 ```
@@ -17,7 +22,7 @@ Ensure you have placed an Excel file in the ['input' folder](input/). The progra
 ### Running Programs
 Open the folder which contains `get_movie_info.py`.
 
-Start a command line by typing 'cmd' into the File Explorer address bar:
+Start a command line by typing 'cmd' + Enter into the File Explorer address bar:
 
 <img src="assets/type_cmd.jpg" alt="Type 'cmd' to open command prompt" width="300" height="200">
 
