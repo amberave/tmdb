@@ -19,7 +19,7 @@ Open the folder which contains `get_movie_info.py`.
 
 Start a command line by typing 'cmd' into the File Explorer address bar:
 
-![Type cmd](assets/type_cmd.jpg)
+<img src="assets/type_cmd.jpg" alt="Type 'cmd' to open command prompt" width="300" height="200">
 
 In the command line, paste the below command:
 ```
