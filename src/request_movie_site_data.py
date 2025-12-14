@@ -164,32 +164,35 @@ def get_letterboxd_user_ratings(username: str):
     if isinstance(method, list):
         method, args = method
     data = method(user_instance, **args) if args else method(user_instance)
+    with open("user_ratings.json", 'w') as f:
+        json.dump(data, f)
     return data
 
-def get_letterboxd_movie_data(title: str, year, user_ratings: dict):
+def get_letterboxd_movie_data(title: str, year, user_ratings: dict, slug=None):
     # Credit: https://github.com/nmcassa/letterboxdpy
     letterboxd_data = {}
     year = int(year)
-    slug = ""
 
-    search_instance = Search(str(title).replace('/', ' '), "films")
-    #try:
-    search_data = search_instance.results
-    #except Exception as e:
-     
-        # return letterboxd_data
-    
-    if not search_data["available"]:
-        return letterboxd_data
-    
-    for result in search_data["results"]:
-        # allow for a 1-year difference
-        if result["year"] in range(year-1, year+2):
-            slug = result["slug"]
-            break
+    if slug is None:
+        search_instance = Search(str(title).replace('/', ' '), "films")
+        #try:
+        search_data = search_instance.results
+        #except Exception as e:
+        
+            # return letterboxd_data
+        
+        if not search_data["available"]:
+            return letterboxd_data
+        
+        for result in search_data["results"]:
+            # allow for a 1-year difference
+            if result["year"] in range(year-1, year+2):
+                slug = result["slug"]
+                break
 
     if slug:
         movie = Movie(slug)
+        letterboxd_data["Letterboxd Slug"] = slug
         letterboxd_data["Letterboxd Average Rating"] = movie.rating
         movie_logged = slug in user_ratings["movies"]
         letterboxd_data["Letterboxd My Rating"] = (float(user_ratings["movies"][slug]["rating"])/2 if movie_logged and user_ratings["movies"][slug]["rating"] is not None else "Not Rated" if movie_logged else None) 
@@ -199,6 +202,7 @@ def get_letterboxd_movie_data(title: str, year, user_ratings: dict):
         letterboxd_data["Runtime (from Letterboxd)"] = movie.runtime
         letterboxd_data["TMDB ID (from Letterboxd)"] = movie.tmdb_link.rsplit('/', 2)[1]
         letterboxd_data["IMDb ID (from Letterboxd)"] = movie.imdb_link.rsplit('/', 2)[1]
+        letterboxd_data["Letterboxd Slug"] = slug
 
     return letterboxd_data
     

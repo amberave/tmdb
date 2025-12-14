@@ -1,6 +1,7 @@
 import pandas as pd
 import json
 import requests
+import math
 from tqdm import tqdm
 from src.request_movie_site_data import setup_apis, search_tmdb, retrieve_tmdb_data, search_imdb, scrape_rotten_tomatoes, get_letterboxd_user_ratings, get_letterboxd_movie_data, get_oscars_data
 
@@ -50,7 +51,21 @@ def save_progress(filename, error_save_folder, movie_data, error_set):
             errors = errors.replace('\u2044', '')
         f.write(errors)
 
-
+def load_new_letterboxd_entries(movie_data, letterboxd_user_ratings):
+    available_slugs = [entry["Letterboxd Slug"] for entry in movie_data if 'Letterboxd Slug' in entry]
+    missing_films = {slug: v for slug,v in letterboxd_user_ratings["movies"].items() if slug not in available_slugs}
+    for film in missing_films:
+        entry = {}
+        entry["Movie Title"] = missing_films[film]["name"]
+        entry["Year"] = missing_films[film]["year"]
+        entry["Letterboxd My Rating"] = missing_films[film]["rating"]/2 if missing_films[film]["rating"] is not None else None
+        entry["Letterboxd Slug"] = film
+        entry["Franchise"] = None
+        entry["Medium"] = None
+        entry["Logged on Letterboxd"] = "Yes"
+        entry["Decade"] = str(math.floor(entry["Year"] / 10) * 10) + 's'
+        movie_data.append(entry)
+    return movie_data
 
 def get_movie_info(filename):
     tmdb = setup_apis()
@@ -58,19 +73,19 @@ def get_movie_info(filename):
     skip_checked_entries_input = input("Input 'c' to check all entries for new site data, else press Enter to skip to newly added rows (s)? ")
     skip_checked_entries = False if skip_checked_entries_input == 'c' else True
     letterboxd_user_ratings = get_letterboxd_user_ratings("DWynter10")
+    movie_data = load_new_letterboxd_entries(movie_data, letterboxd_user_ratings)
     error_set = set()
     
     i = 0
     # search and retrieve movies
     for movie_dict in tqdm(movie_data):
-        movie_fields = movie_dict.keys()
         
         def field_exists_and_valid(fieldname):
-            return fieldname in movie_fields and movie_dict[fieldname] is not None
+            return fieldname in movie_dict and movie_dict[fieldname] is not None
         
         def is_missing_info(fields:list):
             any_none_fields = any(movie_dict.get(key) is None for key in fields if key in movie_dict)
-            missing_fields = not all(key in movie_fields for key in fields)
+            missing_fields = not all(key in movie_dict for key in fields)
             return missing_fields or any_none_fields
 
         # if title or year missing, skip entry entirely
@@ -109,10 +124,11 @@ def get_movie_info(filename):
         site_fields = [
             'Letterboxd Average Rating', 'Letterboxd My Rating', 'Letterboxd Review Count', 
             'Letterboxd Rating Count', 'Cast (from Letterboxd)', 'Runtime (from Letterboxd)', 
-            'TMDB ID (from Letterboxd)', 'IMDb ID (from Letterboxd)'
+            'TMDB ID (from Letterboxd)', 'IMDb ID (from Letterboxd)', 'Letterboxd Slug'
         ]
         if is_missing_info(site_fields):
-            letterboxd_data = get_letterboxd_movie_data(title, year, letterboxd_user_ratings)
+            slug = movie_dict["Letterboxd Slug"] if 'Letterboxd Slug' in movie_dict else None
+            letterboxd_data = get_letterboxd_movie_data(title, year, letterboxd_user_ratings, slug)
             if not letterboxd_data:
                 error_set.add(f"Error: Letterboxd - No info found for {title} ({year})!")
             new_data.update(letterboxd_data)
@@ -129,7 +145,7 @@ def get_movie_info(filename):
         # get Rotten Tomatoes data
         site_fields = ['Tomatometer (Critic Score)', 'Popcornmeter (Audience Score)']
         if is_missing_info(site_fields):
-            full_cast = movie_dict['Cast (from Letterboxd)'].split(', ') if 'Cast (from Letterboxd)' in movie_fields and movie_dict['Cast (from Letterboxd)'] is not None else []
+            full_cast = movie_dict['Cast (from Letterboxd)'].split(', ') if 'Cast (from Letterboxd)' in movie_dict and movie_dict['Cast (from Letterboxd)'] is not None else []
             rt_data = scrape_rotten_tomatoes(title, year, movie_dict['Medium'], full_cast)
             if not rt_data:
                 error_set.add(f"Error: Rotten Tomatoes - No info found for {title} ({year})!")
