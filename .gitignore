@@ -1,9 +1,13 @@
 # my excluded
-api_key.txt
+tmdb_api_key.txt
 *.xlsx
 *.json
 *errors.txt
 *errors - Copy.txt
+src/tmp/*
+input/*
+output/*
+src/tmp/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

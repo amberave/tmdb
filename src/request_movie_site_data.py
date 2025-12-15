@@ -9,7 +9,7 @@ from letterboxdpy.search import Search
 
 def setup_apis():
     # set up TMDB API
-    with open("api_key.txt", 'r') as f:
+    with open("tmdb_api_key.txt", 'r') as f:
         api_key = f.read()
     
     tmdb.API_KEY = api_key
@@ -88,14 +88,15 @@ def search_imdb(movie_dict):
     
     if response.status_code == 200:
         imdb_response = response.json()
-        imdb_data["IMDb Rating"] = imdb_response["rating"]["aggregateRating"]
         try:
+            imdb_data["IMDb Rating"] = imdb_response["rating"]["aggregateRating"]
+            imdb_data["Poster URL"] = imdb_response["primaryImage"]["url"]
             imdb_data["Metascore"] = imdb_response["metacritic"]["score"]
-        except:
-            # if not present, no entry on Metacritic
-            imdb_data["Metascore"] = "Not Listed"
-        imdb_data["Poster URL"] = imdb_response["primaryImage"]["url"]
-
+        except KeyError as e:
+            if str(e) == "'metacritic'":
+                # if not present, no entry on Metacritic
+                imdb_data["Metascore"] = "Not Listed"
+        
     return imdb_data
 
 def scrape_rotten_tomatoes(title, year, medium, full_cast:list):
@@ -191,12 +192,15 @@ def get_letterboxd_movie_data(title: str, year, user_ratings: dict, slug=None):
         letterboxd_data["Letterboxd Average Rating"] = movie.rating
         movie_logged = slug in user_ratings["movies"]
         letterboxd_data["Letterboxd My Rating"] = (float(user_ratings["movies"][slug]["rating"])/2 if movie_logged and user_ratings["movies"][slug]["rating"] is not None else "Not Rated" if movie_logged else None) 
-        letterboxd_data["Letterboxd Review Count"] = movie.pages.profile.script["aggregateRating"]["reviewCount"] 
-        letterboxd_data["Letterboxd Rating Count"] = movie.pages.profile.script["aggregateRating"]["ratingCount"] 
-        letterboxd_data["Cast (from Letterboxd)"] = ', '.join([entry["name"].replace(',', '') for entry in movie.cast])
+        try:
+            letterboxd_data["Letterboxd Review Count"] = movie.pages.profile.script["aggregateRating"]["reviewCount"] 
+            letterboxd_data["Letterboxd Rating Count"] = movie.pages.profile.script["aggregateRating"]["ratingCount"] 
+        except:
+            pass
+        letterboxd_data["Cast (from Letterboxd)"] = ', '.join([entry["name"].replace(',', '') for entry in movie.cast]) if movie.cast is not None else None
         letterboxd_data["Runtime (from Letterboxd)"] = movie.runtime
-        letterboxd_data["TMDB ID (from Letterboxd)"] = movie.tmdb_link.rsplit('/', 2)[1]
-        letterboxd_data["IMDb ID (from Letterboxd)"] = movie.imdb_link.rsplit('/', 2)[1]
+        letterboxd_data["TMDB ID (from Letterboxd)"] = movie.tmdb_link.rsplit('/', 2)[1] if movie.tmdb_link is not None else None
+        letterboxd_data["IMDb ID (from Letterboxd)"] = movie.imdb_link.rsplit('/', 2)[1] if movie.imdb_link is not None else None
         letterboxd_data["Letterboxd Slug"] = slug
 
     return letterboxd_data

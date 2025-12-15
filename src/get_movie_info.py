@@ -13,7 +13,7 @@ def load_movie_data(filename):
             # open save file in tmp folder
             try:
                 save_filename = "src/tmp/" + filename.replace(".xlsx", "_save_file.json")
-                with open(save_filename, 'r') as file:
+                with open(save_filename, 'r', encoding='utf-8') as file:
                     movie_data = json.load(file)
             except FileNotFoundError:
                 raise FileNotFoundError(f"Error: There is no save file for '{filename}'. Check the filename and rerun the program if save file exists, else select 's' to start from beginning and filename will be generated.")
@@ -40,18 +40,17 @@ def save_progress(filename, error_save_folder, movie_data, error_set):
         json.dump(movie_data, f)
     
     # get errors and only save unique values
-    with open(err_filename, 'r') as f:
+    with open(err_filename, 'r', encoding='utf-8') as f:
         err_file_text = f.read()
         err_file_list = set(err_file_text.split('\n'))
     error_set.update(err_file_list)
     error_list = sorted([v for v in error_set if type(v) is str])
-    with open(error_save_folder + filename.replace(".xlsx", "_errors.txt"), 'w') as f:
+    with open(error_save_folder + filename.replace(".xlsx", "_errors.txt"), 'w', encoding='utf-8') as f:
         errors = '\n'.join(error_list)
-        if '\u2044' in errors:
-            errors = errors.replace('\u2044', '')
         f.write(errors)
 
 def load_new_letterboxd_entries(movie_data, letterboxd_user_ratings):
+    print("\nLoading in your missing logged movies from Letterboxd...")
     available_slugs = [entry["Letterboxd Slug"] for entry in movie_data if 'Letterboxd Slug' in entry]
     missing_films = {slug: v for slug,v in letterboxd_user_ratings["movies"].items() if slug not in available_slugs}
     for film in missing_films:
@@ -65,14 +64,15 @@ def load_new_letterboxd_entries(movie_data, letterboxd_user_ratings):
         entry["Logged on Letterboxd"] = "Yes"
         entry["Decade"] = str(math.floor(entry["Year"] / 10) * 10) + 's'
         movie_data.append(entry)
+    print(f"You've watched {len(missing_films)} new properties since last upload: {', '.join([v['name'] for v in missing_films.values()])}\n")
     return movie_data
 
-def get_movie_info(filename):
+def get_movie_info(filename, letterboxd_username):
     tmdb = setup_apis()
     movie_data = load_movie_data(filename)
-    skip_checked_entries_input = input("Input 'c' to check all entries for new site data, else press Enter to skip to newly added rows (s)? ")
+    skip_checked_entries_input = input("Input 'c' to check all entries for missing data, else press Enter to skip to newly added rows: ")
     skip_checked_entries = False if skip_checked_entries_input == 'c' else True
-    letterboxd_user_ratings = get_letterboxd_user_ratings("DWynter10")
+    letterboxd_user_ratings = get_letterboxd_user_ratings(letterboxd_username)
     movie_data = load_new_letterboxd_entries(movie_data, letterboxd_user_ratings)
     error_set = set()
     
@@ -99,6 +99,7 @@ def get_movie_info(filename):
         tmdb_id = ""
         
         # Letterboxd is most reliable site for getting info, best one to skip on
+        # runtime is not pulled for new entries from Letterboxd, so will pick up those too
         if not is_missing_info(['Runtime (from Letterboxd)']) and skip_checked_entries:
             continue
         

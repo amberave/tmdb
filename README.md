@@ -1,18 +1,28 @@
 # The Movie Database Automation
 
+This program reads in an Excel file, pulls data from sites:
+* The Movie Database (TMDB)
+* Internet Movie Database (IMDb) - including Metacritic (Metascore)
+* Letterboxd
+* Rotten Tomatoes
+
+It writes the information back to an Excel file.
+
+It can also pull your latest logged films on Letterboxd if they are not already in the list. 
+
 ## Installation
 
-Navigate to the folder where you want the program saved, start a command line by typing 'cmd' + Enter into the File Explorer address bar:
+Navigate to the folder where you want the program saved, start Command Prompt by typing 'cmd' + Enter into the File Explorer address bar:
 
 <img src="assets/type_cmd.jpg" alt="Type 'cmd' to open command prompt" width="300" height="200">
 
-In the command line, paste the below command:
+In Command Prompt, paste the below command:
 ```
 git clone https://github.com/amberave/tmdb.git;cd tmdb;python -m venv venv\;venv\Scripts\activate;pip install -r requirements.txt
 ```
 1. Login to [The Movie Database](https://www.themoviedb.org/settings/api).
 2. Scroll to the bottom of the [API page](https://www.themoviedb.org/settings/api) and copy your API Key.
-3. Create a file called `api_key.txt` in this folder (`tmdb`) and paste your API key into it. 
+3. Create a file called `tmdb_api_key.txt` in this folder (`tmdb`) and paste your API key into it. 
 
 ## Usage
 
@@ -20,35 +30,48 @@ git clone https://github.com/amberave/tmdb.git;cd tmdb;python -m venv venv\;venv
 Ensure you have placed an Excel file in the `input` folder. The program will try and load `movies_database.xlsx`. If your file is not named this, you can rename it to `movies_database.xlsx` or change the value `filename` in `[main.py](main.py)`.
 
 ### Running Programs
-Open the folder which contains `get_movie_info.py`.
+Open the folder `tmdb` (should contain `requirements.txt`).
 
-Start a command line by typing 'cmd' + Enter into the File Explorer address bar:
+Start Command Prompt by typing `'cmd'` + `Enter` into the File Explorer address bar:
 
 <img src="assets/type_cmd.jpg" alt="Type 'cmd' to open command prompt" width="300" height="200">
 
-In the command line, paste the below command:
+In Command Prompt, paste the below command:
 ```
-venv\Scripts\activate;python ./get_movie_info.py
+venv\Scripts\activate;python ./main.py
 ```
+<small>*For subsequent calls of this command, press the up arrow then Enter.*</small>
+
 You will be asked to input a character:
 
 | Input | Meaning |
 |--|--|
-| 'u' | **Update** - continue from where program last left off |
-| 's' | **Start** - program will restart from the very beginning, discarding any existing data.|
+| 's' | **Start** - program will restart from the very beginning, pulling from input spreadsheet and discarding any other existing data. If you haven't run the program before, run this first.|
+| 'u' | **Update** - if you've already pulled in data from a spreadsheet but only got halfway through, this will continue from where program last left off. If program completed and you just want to add new Letterboxd entries or attempt retrieval of missing data, select this.|
 
 You will be asked to input another character:
 
 | Input | Meaning |
 |--|--|
 | 'c' | Run the program over all values and attempt to fill any blank fields |
-| Enter (nothing) | Skip all filled-in rows and only fill most recently added rows (with no program-generated data). |
+| Enter (nothing) | Skip all rows that have attempted data retrieval and only fill most recently added rows (with no program-generated data). <br>*This setting specifically tries to fill any rows with missing `Runtime (from Letterboxd)` data.*|
 
-For subsequent calls of this command, press the up arrow then Enter.
+
 
 ### Output Data
 
 The output data will be saved to the `output` folder under the name `output-[filename].xlsx` where 'filename' is the original filename. There will also be an errors log named `output-[filename]_errors.txt` which will show the title and year along with the site where data retrieval failed. 
+
+### Updating
+
+**Only update if I tell you to.**
+
+To update, go to the `tmdb` folder in File Explorer, open Command Prompt and type the following:
+```
+git pull
+```
+
+You can then run the program as normal.
 
 ## Data Details:
 
