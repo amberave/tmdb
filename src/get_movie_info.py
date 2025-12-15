@@ -3,7 +3,7 @@ import json
 import requests
 import math
 from tqdm import tqdm
-from src.request_movie_site_data import setup_apis, search_tmdb, retrieve_tmdb_data, search_imdb, scrape_rotten_tomatoes, get_letterboxd_user_ratings, get_letterboxd_movie_data, get_oscars_data
+from request_movie_site_data import setup_apis, search_tmdb, retrieve_tmdb_data, search_imdb, scrape_rotten_tomatoes, get_letterboxd_user_ratings, get_letterboxd_movie_data, get_oscars_data
 
 def load_movie_data(filename):
     input_filename = "input/" + filename
