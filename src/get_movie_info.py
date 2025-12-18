@@ -2,34 +2,35 @@ import pandas as pd
 import json
 import requests
 import math
+import os
 from tqdm import tqdm
 from request_movie_site_data import setup_apis, search_tmdb, retrieve_tmdb_data, search_imdb, scrape_rotten_tomatoes, get_letterboxd_user_ratings, get_letterboxd_movie_data, get_oscars_data
 
-def load_movie_data(filename):
-    input_filename = "input/" + filename
-    while True:
-        mode = input("Do you want to update or start from beginning? Enter 'u' or 's': ")
-        if mode.lower() == 'u':
-            # open save file in tmp folder
-            try:
-                save_filename = "src/tmp/" + filename.replace(".xlsx", "_save_file.json")
-                with open(save_filename, 'r', encoding='utf-8') as file:
-                    movie_data = json.load(file)
-            except FileNotFoundError:
-                raise FileNotFoundError(f"Error: There is no save file for '{filename}'. Check the filename and rerun the program if save file exists, else select 's' to start from beginning and filename will be generated.")
-            break
-        elif mode.lower() == 's':
-            # get excel data to read and use for search
-            try:
-                df = pd.read_excel(input_filename, header=0)
-                df = df.replace({float('nan'): None})
-                movie_data = df.to_dict('records')
-                
-                # if starting new, clear errors log
-                open('src/tmp/' + filename.replace(".xlsx", "_errors.txt"), 'w').close()
-            except FileNotFoundError:
-                raise FileNotFoundError(f"Error: There is no file in 'input' folder called '{filename}'.\nCheck the filename and rerun the program.")
-            break
+def load_movie_data(start_mode=False, filepath=None):
+    if not start_mode:
+        with open('last_filename', 'r') as f:
+            filename = f.read()
+        # open save file in tmp folder
+        try:
+            save_filename = "src/tmp/" + filename.replace(".xlsx", "_save_file.json")
+            with open(save_filename, 'r', encoding='utf-8') as file:
+                movie_data = json.load(file)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Error: There is no save file for '{filename}'. Check the filename and rerun the program if save file exists, else select 's' to start from beginning and filename will be generated.")
+    else: # if 'update' mode - pull from save file
+        filename = os.path.basename(filepath)
+        with open('last_filename', 'w') as f:
+            f.write(filename)
+        # get excel data to read and use for search
+        try:
+            df = pd.read_excel(filepath, header=0)
+            df = df.replace({float('nan'): None})
+            movie_data = df.to_dict('records')
+            
+            # if starting new, clear errors log
+            open('src/tmp/' + filename.replace(".xlsx", "_errors.txt"), 'w').close()
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Error: Cannot find file '{filepath}'.")
     return movie_data
 
 def save_progress(filename, error_save_folder, movie_data, error_set):
@@ -49,7 +50,7 @@ def save_progress(filename, error_save_folder, movie_data, error_set):
         errors = '\n'.join(error_list)
         f.write(errors)
 
-def load_new_letterboxd_entries(movie_data, letterboxd_user_ratings):
+def add_new_letterboxd_entries(movie_data, letterboxd_user_ratings):
     print("\nLoading in your missing logged movies from Letterboxd...")
     available_slugs = [entry["Letterboxd Slug"] for entry in movie_data if 'Letterboxd Slug' in entry]
     missing_films = {slug: v for slug,v in letterboxd_user_ratings["movies"].items() if slug not in available_slugs}
@@ -65,13 +66,11 @@ def load_new_letterboxd_entries(movie_data, letterboxd_user_ratings):
         entry["Decade"] = str(math.floor(entry["Year"] / 10) * 10) + 's'
         movie_data.append(entry)
     print(f"You've watched {len(missing_films)} new properties since last upload: {', '.join([v['name'] for v in missing_films.values()])}\n")
-    return movie_data
+    return movie_data, missing_films
 
-def get_movie_info(filename, letterboxd_username):
+def get_movie_info(filename, letterboxd_username, movie_data, skip_checked_entries):
     tmdb = setup_apis()
-    movie_data = load_movie_data(filename)
-    skip_checked_entries_input = input("Input 'c' to check all entries for missing data, else press Enter to skip to newly added rows: ")
-    skip_checked_entries = False if skip_checked_entries_input == 'c' else True
+    
     letterboxd_user_ratings = get_letterboxd_user_ratings(letterboxd_username)
     movie_data = load_new_letterboxd_entries(movie_data, letterboxd_user_ratings)
     error_set = set()
