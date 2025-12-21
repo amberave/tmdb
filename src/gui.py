@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+import threading
 from tkinter import filedialog
 from request_movie_site_data import get_letterboxd_user_ratings
 from get_movie_info import load_movie_data, add_new_letterboxd_entries
@@ -19,12 +20,14 @@ class App:
         # instantiate and set up app
         self.ws = tk.Tk()
         self.button_font = ('Garamond', 15)
+        self.load_screen = False
         self.setup_interface()
-
-    def print_lb_ratings(self):
-        window, canvas = self.New_Window(height=200, width=300)
-        window.title('Letterboxd User Ratings')
-        label = tk.Label(canvas, text='Loading in new Letterboxd entries...')
+    
+    
+    def vague_load_screen(self):
+        new, canvas = self.New_Window(height=100, width=200)
+        new.title('Source Data')
+        label = tk.Label(canvas, text='Loading in data...')
         label.pack()
         pb = ttk.Progressbar(
             canvas,
@@ -34,41 +37,39 @@ class App:
         )
         pb.pack()
         pb.start()
-        print(5)
-        self.movie_data, missing_films = window.after_idle(add_new_letterboxd_entries(self.movie_data, self.user_ratings))
-        # pb.destroy()
-        label.config(text=f"You've watched {len(missing_films)} new properties since last upload: {', '.join([v['name'] for v in missing_films.values()])}\n")
-        # label.pack()
-        # window.mainloop()
 
-    def load_data(self, container, start_mode=False):
-        window, canvas = self.New_Window(height=100, width=200)
-        window.title('Source Data')
-        label = tk.Label(canvas, text='Loading in data...')
+        new.protocol('WM_DELETE_WINDOW', lambda: new.destroy() if self.load_screen else False) # Close the window only if main window has shown up
+        new.mainloop()
+
+    def print_lb_ratings(self):
+        window, canvas = self.New_Window(height=200, width=300)
+        window.title('Letterboxd User Ratings')
+        label = tk.Label(canvas, text='Loading in new Letterboxd entries...')
         label.pack()
-        
-        self.user_ratings = get_letterboxd_user_ratings("DWynter10")
-        def inner_func():
-            if start_mode:
-                try:
-                    filename = filedialog.askopenfilename()
-                    self.movie_data = load_movie_data(start_mode=True, filepath=filename)
-                    container.destroy()
-                except:
-                    pass
-                window.destroy()
-            else:
-                try:
-                    self.movie_data = load_movie_data()
-                    container.destroy()
-                except:
-                    pass
-                print('Hello')
-                window.destroy()
-        
-        window.after(0, inner_func)
-        window.mainloop()
+        self.movie_data, missing_films = add_new_letterboxd_entries(self.movie_data, self.user_ratings)
+        label1 = tk.Label(canvas, font=self.button_font, text=f"You've watched {len(missing_films)} new properties since last upload:")
+        label1.pack()
+        label2 = tk.Label(canvas, wraplength=500, justify='left', text=f"{', '.join([v['name'] for v in missing_films.values()])}\n")
+        label2.pack()
+        button = tk.Button(canvas, text='OK', padx=20, command=window.destroy)
+        button.pack()
 
+    def load_data(self, start_mode=False):
+        threading.Thread(target=self.vague_load_screen)
+        self.user_ratings = get_letterboxd_user_ratings("jigsaw4real")
+        if start_mode:
+            try:
+                filename = filedialog.askopenfilename()
+                self.movie_data = load_movie_data(start_mode=True, filepath=filename)
+            except:
+                pass
+        else:
+            try:
+                self.movie_data = load_movie_data()
+            except:
+                pass
+        self.load_screen = True
+        
     def New_Window(self, height=HEIGHT, width=WIDTH):
         window = tk.Toplevel()
         canvas = tk.Canvas(window, height=height, width=width)
@@ -101,7 +102,6 @@ class App:
         b2.grid(column=0, row=1, sticky='W')
         b3.grid(column=1, row=1, sticky='e')
         b4.grid(column=0, row=2, columnspan=2)
-
         
     def setup_interface(self):
         
@@ -135,12 +135,13 @@ class App:
         label1.pack()
 
         b1 = tk.Button(container, text="Upload Excel File 📁", bg='#A3CFA4')
-        b1.config(command=lambda: [self.load_data(container, start_mode=True), self.add_main_menu(canvas)])
+        t = threading.Thread(target=self.load_data)
+        b1.config(command=lambda: [self.load_data(), self.add_main_menu(canvas)])
         b1.config(font=self.button_font, width=30)
         b1.pack()
 
         b2 = tk.Button(container, text="Load from Save File 💾", bg='#FFF3BD')
-        b2.config(command=lambda: [self.load_data(container), self.add_main_menu(canvas)])
+        b2.config(command=lambda: [self.load_data(), self.add_main_menu(canvas)])
         b2.config(font=self.button_font, width=30)
         b2.pack()
 

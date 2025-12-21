@@ -8,7 +8,7 @@ from request_movie_site_data import setup_apis, search_tmdb, retrieve_tmdb_data,
 
 def load_movie_data(start_mode=False, filepath=None):
     if not start_mode:
-        with open('last_filename', 'r') as f:
+        with open('last_filename.txt', 'r') as f:
             filename = f.read()
         # open save file in tmp folder
         try:
