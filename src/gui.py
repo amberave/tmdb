@@ -206,7 +206,7 @@ class App:
 
         tk.Label(
             window, 
-            font=('Cooper Black', 15), 
+            font=self.button_font, 
             text=f"You've watched {len(missing_films)} new properties\nsince last upload:"
         ).pack(pady=10)
 
@@ -259,7 +259,7 @@ class App:
         title = tk.Label(
             self.main_canvas,
             text="CineFiles",
-            font=self.button_font,
+            font=("Cooper Black", 40, 'bold'),
             fg="red",
             image=self.icon,
             compound='top',
