@@ -1,5 +1,13 @@
 # The Movie Database Automation
 
+1. [Overview](#overview)
+2. [Installation](#installation)
+3. [Usage](#usage)
+4. [Data Details](#data-details)
+5. [Troubleshooting](#troubleshooting)
+
+## Overview
+
 This program reads in an Excel file, pulls data from sites:
 * The Movie Database (TMDB)
 * Internet Movie Database (IMDb) - including Metacritic (Metascore)
