@@ -29,29 +29,30 @@ def search_tmdb(query, year, medium):
 def retrieve_tmdb_data(movie_dict, tmdb_id, medium):
     is_tv = medium in ['Documentary Mini Series', 'Mini Series']
     item = tmdb.TV(tmdb_id) if is_tv else tmdb.Movies(tmdb_id)
+    tmdb_data = {}
 
     try:
         response = item.credits()
     except:
-        return movie_dict
+        return tmdb_data
     directors = [] 
     for credit in item.crew:  
         if credit["job"] == "Director":  
             directors.append(credit["name"])
-    movie_dict["Director"] =     ', '.join(directors)
+    tmdb_data["Director"] =     ', '.join(directors)
 
     # get basic movie info
     response = item.info()
     
     if not is_tv:
-        movie_dict["Runtime (minutes)"] = item.runtime
-        movie_dict["Budget"] = item.budget
-        movie_dict["Box Office"] = item.revenue
+        tmdb_data["Runtime (minutes)"] = item.runtime
+        tmdb_data["Budget"] = item.budget
+        tmdb_data["Box Office"] = item.revenue
         imdb_id = item.imdb_id
-        movie_dict["Franchise"] = item.belongs_to_collection["name"].replace(' Collection', '') if item.belongs_to_collection is not None and movie_dict["Franchise"] is None else movie_dict["Franchise"]
+        tmdb_data["Franchise"] = item.belongs_to_collection["name"].replace(' Collection', '') if item.belongs_to_collection is not None and movie_dict["Franchise"] is None else movie_dict["Franchise"]
     
-    movie_dict["Country of Origin"] = ', '.join(item.origin_country)
-    movie_dict["Spoken Languages"] = ', '.join(country["english_name"] for country in item.spoken_languages)
+    tmdb_data["Country of Origin"] = ', '.join(item.origin_country)
+    tmdb_data["Spoken Languages"] = ', '.join(country["english_name"] for country in item.spoken_languages)
     
     # get classification
     if not is_tv:
@@ -65,12 +66,12 @@ def retrieve_tmdb_data(movie_dict, tmdb_id, medium):
                 break
             if c['iso_3166_1'] == 'US':
                 us_class = c['certification']
-        movie_dict["Classification"] = aus_class if aus_class != '' else f"{us_class} (US)" if us_class != '' else None
+        tmdb_data["Classification"] = aus_class if aus_class != '' else f"{us_class} (US)" if us_class != '' else None
 
         # putting this last as IMDb data will be next columns
-        movie_dict["IMDb ID"] = imdb_id
+        tmdb_data["IMDb ID"] = imdb_id
     
-    return movie_dict
+    return tmdb_data
 
 def search_imdb(movie_dict):
     # Credit: https://imdbapi.dev/
@@ -176,7 +177,10 @@ def get_letterboxd_movie_data(title: str, year, user_ratings: dict, slug=None):
 
     if slug is None:
         search_instance = Search(str(title).replace('/', ' '), "films")
-        search_data = search_instance.results
+        try:
+            search_data = search_instance.results
+        except:
+            return letterboxd_data
 
         if not search_data["available"]:
             return letterboxd_data

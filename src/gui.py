@@ -1,154 +1,302 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog, messagebox
 import threading
-from tkinter import filedialog
-from request_movie_site_data import get_letterboxd_user_ratings
-from get_movie_info import load_movie_data, add_new_letterboxd_entries
+import os
 import pandas as pd
+
+from request_movie_site_data import get_letterboxd_user_ratings, setup_apis
+from get_movie_info import get_movie_info, load_movie_data, add_new_letterboxd_entries, save_progress
 
 HEIGHT = 600
 WIDTH = 800
 
 class App:
-    
+
     def __init__(self):
-        # data
         self.movie_data = None
         self.user_ratings = None
-        self.filename = ''
-        self.skip_checked_entries = True
-        # instantiate and set up app
+        self.errors = set()
+        self.filename = None
+
         self.ws = tk.Tk()
         self.button_font = ('Garamond', 15)
-        self.load_screen = False
+        self.icon = tk.PhotoImage(file=r"assets\cinefiles_icon.png")
+        self.ws.iconphoto(True, self.icon)
+
         self.setup_interface()
-    
-    
-    def vague_load_screen(self):
-        new, canvas = self.New_Window(height=100, width=200)
-        new.title('Source Data')
-        label = tk.Label(canvas, text='Loading in data...')
-        label.pack()
-        pb = ttk.Progressbar(
-            canvas,
-            orient='horizontal',
-            mode='indeterminate',
-            length=280
-        )
-        pb.pack()
-        pb.start()
-
-        new.protocol('WM_DELETE_WINDOW', lambda: new.destroy() if self.load_screen else False) # Close the window only if main window has shown up
-        new.mainloop()
-
-    def print_lb_ratings(self):
-        window, canvas = self.New_Window(height=200, width=300)
-        window.title('Letterboxd User Ratings')
-        label = tk.Label(canvas, text='Loading in new Letterboxd entries...')
-        label.pack()
-        self.movie_data, missing_films = add_new_letterboxd_entries(self.movie_data, self.user_ratings)
-        label1 = tk.Label(canvas, font=self.button_font, text=f"You've watched {len(missing_films)} new properties since last upload:")
-        label1.pack()
-        label2 = tk.Label(canvas, wraplength=500, justify='left', text=f"{', '.join([v['name'] for v in missing_films.values()])}\n")
-        label2.pack()
-        button = tk.Button(canvas, text='OK', padx=20, command=window.destroy)
-        button.pack()
-
-    def load_data(self, start_mode=False):
-        threading.Thread(target=self.vague_load_screen)
-        self.user_ratings = get_letterboxd_user_ratings("jigsaw4real")
-        if start_mode:
-            try:
-                filename = filedialog.askopenfilename()
-                self.movie_data = load_movie_data(start_mode=True, filepath=filename)
-            except:
-                pass
-        else:
-            try:
-                self.movie_data = load_movie_data()
-            except:
-                pass
-        self.load_screen = True
-        
-    def New_Window(self, height=HEIGHT, width=WIDTH):
-        window = tk.Toplevel()
-        canvas = tk.Canvas(window, height=height, width=width)
-        canvas.pack()
-        return window, canvas
-
-    def add_main_menu(self, canvas):
-        # creating a container
-        container = tk.Frame(canvas, bg='black')
-        container.rowconfigure(0,)
-        container.pack(side = "top", fill = "both", expand = True) 
-
-        b1 = tk.Button(container, text="Get Latest Letterboxd Logs", bg='#40bdf5')
-        b1.config(command=self.print_lb_ratings)
-        b1.config(font=self.button_font, width=30)
-
-        b2 = tk.Button(container, text="Fill Missing Data", bg='#ff7d01')
-        b2.config(command=self.print_lb_ratings)
-        b2.config(font=self.button_font, width=14)
-
-        b3 = tk.Button(container, text="Fill Latest Entries", bg='#ff7d01')
-        b3.config(command=self.print_lb_ratings)
-        b3.config(font=self.button_font, width=14)
-        
-        b4 = tk.Button(container, text="Export Data", bg='#00e155')
-        b4.config(command=self.print_lb_ratings)
-        b4.config(font=self.button_font, width=30)
-
-        b1.grid(column=0, row=0, columnspan=2)
-        b2.grid(column=0, row=1, sticky='W')
-        b3.grid(column=1, row=1, sticky='e')
-        b4.grid(column=0, row=2, columnspan=2)
-        
-    def setup_interface(self):
-        
-        icon = tk.PhotoImage(file="assets\cinefiles_icon.png")
-        self.ws.iconphoto(True, icon)
-        
-        self.ws.config(background="black")
-        self.ws.title("CineFiles")
-        
-        canvas = tk.Canvas(self.ws, height=HEIGHT, width=WIDTH)
-        canvas.config(bg='black', highlightbackground='black')
-        canvas.pack()
-
-        label_title = tk.Label(canvas, 
-            text="CineFiles", 
-            font=("Cooper Black", 40, 'bold'), 
-            fg="red", 
-            bg="black",
-            image=icon, 
-            compound='top',
-            pady=15)
-        label_title.pack()
-
-        # creating a container
-        container = tk.Frame(canvas, bg='black')
-        container.pack(side = "top", fill = "both", expand = True) 
-
-        label1 = tk.Label(
-            container, padx=15, fg='white', bg='black', 
-            text='Select data source:', font=(self.button_font[0], self.button_font[1], 'bold'))
-        label1.pack()
-
-        b1 = tk.Button(container, text="Upload Excel File 📁", bg='#A3CFA4')
-        t = threading.Thread(target=self.load_data)
-        b1.config(command=lambda: [self.load_data(), self.add_main_menu(canvas)])
-        b1.config(font=self.button_font, width=30)
-        b1.pack()
-
-        b2 = tk.Button(container, text="Load from Save File 💾", bg='#FFF3BD')
-        b2.config(command=lambda: [self.load_data(), self.add_main_menu(canvas)])
-        b2.config(font=self.button_font, width=30)
-        b2.pack()
-
-        label2 = tk.Label(padx=15, fg='black', bg='black')
-        label2.pack()
-
         self.ws.mainloop()
 
+    # -------------------- LOADING WINDOW --------------------
+
+    def show_loading_screen(self, text="Loading..."):
+        self.loading_window = tk.Toplevel(self.ws)
+        self.loading_window.title("Loading")
+        self.loading_window.geometry("300x150")
+        self.loading_window.transient(self.ws)
+        self.loading_window.grab_set()
+
+        label = tk.Label(self.loading_window, text=text)
+        label.pack(pady=10)
+
+        self.pb = ttk.Progressbar(
+            self.loading_window,
+            orient='horizontal',
+            mode='indeterminate',
+            length=200
+        )
+        self.pb.pack(pady=10)
+        self.pb.start()
+    
+    def close_loading_screen(self):
+        if hasattr(self, "loading_window"):
+            self.loading_window.destroy()
+    
+    def show_progress_screen(self, text="Retrieving movie data..."):
+        self.progress_window = tk.Toplevel(self.ws)
+        self.progress_window.title("Loading")
+        self.progress_window.geometry("300x150")
+        self.progress_window.transient(self.ws)
+        self.progress_window.grab_set()
+
+        label = tk.Label(self.progress_window, text=text)
+        label.pack(pady=10)
+
+        self.pb_pc = ttk.Progressbar(
+            self.progress_window,
+            orient='horizontal',
+            mode='determinate',
+            length=200,
+            maximum=100
+        )
+        self.pb_pc.pack(pady=20)
+
+        self.progress_label = tk.Label(self.progress_window, text=f"0/{len(self.movie_data)}\n(0%)")
+        self.progress_label.pack()
+
+    def close_progress_screen(self):
+        if hasattr(self, "progress_window"):
+            self.progress_window.destroy()
+
+    def update_progress(self, current_num, num_entries):
+        progress = round((current_num / num_entries) * 100, 2)
+        self.pb_pc["value"] = progress
+        self.progress_label.config(text=f"{current_num}/{num_entries}\n({progress}%)")
+
+    # -------------------- DATA LOADING --------------------
+
+    def load_data(self, start_mode=False):
+        self.show_loading_screen()
+        threading.Thread(
+            target=self.load_data_thread,
+            args=(start_mode,),
+            daemon=True
+        ).start()
+
+    def load_data_thread(self, start_mode=False, letterboxd_username="jigsaw4real"):
+        try:
+            self.user_ratings = get_letterboxd_user_ratings(letterboxd_username)
+
+            if start_mode:
+                filename = filedialog.askopenfilename()
+                if filename:
+                    self.movie_data, self.filename = load_movie_data(start_mode=True, filepath=filename)
+            else:
+                self.movie_data, self.filename = load_movie_data()
+
+        except Exception as e:
+            print("Error loading data:", e)
+
+        self.ws.after(0, self.finish_loading)
+
+    def finish_loading(self):
+        self.close_loading_screen()
+        if self.first_time:
+            self.first_time = False
+            self.add_main_menu(self.main_canvas)
+    
+    # -------------------- DATA EXPORTING --------------------
+
+    def export_data(self):
+        self.show_loading_screen("Exporting data...")
+        threading.Thread(
+            target=self.export_data_thread,
+            daemon=True
+        ).start()
+    
+    def export_data_thread(self):
+        save_progress(self.filename, "output/output-", self.movie_data, self.errors)
+        output_df = pd.DataFrame(self.movie_data)
+        
+        output_filename = "output/output-" + self.filename
+        output_df.to_excel(output_filename, index=False)
+
+        self.ws.after(0, self.finish_exporting)
+    
+    def finish_exporting(self):
+        self.pb.destroy()
+        label = tk.Label(self.loading_window, text=f"Data exported to 'output-{self.filename}")
+        label.pack(pady=10)
+        os.system("start output\\")
+
+    # -------------------- RETRIEVE MOVIE DATA --------------------
+    
+    def retrieve_data(self, skip_checked_entries):
+        self.show_progress_screen()
+        threading.Thread(
+            target=self.retrieve_data_thread,
+            args=(skip_checked_entries,),
+            daemon=True
+        ).start()
+
+    def retrieve_data_thread(self, skip_checked_entries):
+        tmdb = setup_apis()
+        num_entries = len(self.movie_data)
+
+        i = 0
+        for idx, movie_dict in enumerate(self.movie_data):
+            new_data, self.errors = get_movie_info(
+                    self.filename, 
+                    self.user_ratings, 
+                    movie_dict, 
+                    self.errors, 
+                    skip_checked_entries=skip_checked_entries
+                )
+
+            if new_data:
+                i += 1
+            
+                # add all the details, then ratings, then cast and poster url
+                priority_fields = [
+                    'Director', 'Runtime (minutes)', 'Budget', 'Box Office', 
+                    'Country of Origin', 'Spoken Languages', 'Classification', 'IMDb ID', 'IMDb Rating',
+                    'Metascore', 'Tomatometer (Critic Score)', 'Popcornmeter (Audience Score)',
+                    'Letterboxd Average Rating', 'Letterboxd My Rating', 'Academy Award Nominations',
+                    'Academy Award Wins', 'Academy Award Details'
+                ]
+                for k in list(new_data.keys()):
+                    if k in priority_fields:
+                        movie_dict[k] = new_data.pop(k)
+                movie_dict.update(new_data)
+
+                # save function
+                if i == 6:
+                    save_progress(self.filename, "src/tmp/", self.movie_data, self.errors)
+                    i = 0
+            
+            self.ws.after(0, self.update_progress, idx, num_entries)
+
+
+
+        self.ws.after(0, self.finish_retrieving)
+    
+    def finish_retrieving(self):
+        self.close_progress_screen()
+        messagebox.showinfo("Done", "Movie data retrieval complete!")
+
+    # -------------------- UI WINDOWS --------------------
+
+    def print_lb_ratings(self):
+        window = tk.Toplevel(self.ws)
+        window.title("Letterboxd Updates")
+
+        self.movie_data, missing_films = add_new_letterboxd_entries(
+            self.movie_data,
+            self.user_ratings
+        )
+
+        tk.Label(
+            window, 
+            font=('Cooper Black', 15), 
+            text=f"You've watched {len(missing_films)} new properties\nsince last upload:"
+        ).pack(pady=10)
+
+        tk.Label(
+            window,
+            text=", ".join(v['name'] for v in missing_films.values()),
+            wraplength=350
+        ).pack(padx=10, pady=10)
+
+        tk.Button(window, text='OK', command=window.destroy).pack(pady=10)
+
+    # -------------------- MAIN MENU --------------------
+
+    def add_main_menu(self, canvas):
+        container = tk.Frame(canvas, bg='black')
+        container.pack(fill="both", expand=True)
+
+        buttons = [
+            ("Get Latest Letterboxd Logs", self.print_lb_ratings, '#40bdf5', 30),
+            ("Fill All Missing Data", lambda: self.retrieve_data(False), '#ff7d01', 20),
+            ("Fill Only Latest Entries", lambda: self.retrieve_data(True), '#ff7d01', 20),
+            ("Export Data", self.export_data, '#00e155', 30),
+        ]
+
+        for text, cmd, color, width in buttons:
+            b = tk.Button(
+                container,
+                text=text,
+                command=cmd,
+                bg=color,
+                font=self.button_font,
+                width=width
+            ).pack(pady=5)
+
+    # -------------------- START SCREEN --------------------
+
+    def setup_interface(self):
+        self.ws.title("CineFiles")
+        self.ws.configure(bg="black")
+
+        self.main_canvas = tk.Canvas(
+            self.ws, 
+            height=HEIGHT, 
+            width=WIDTH,
+            bg='black', 
+            highlightbackground='black'
+        )
+        self.main_canvas.pack()
+
+        title = tk.Label(
+            self.main_canvas,
+            text="CineFiles",
+            font=("Cooper Black", 40, 'bold'),
+            fg="red",
+            image=self.icon,
+            compound='top',
+            bg="black"
+        ).pack(pady=20)
+
+        container = tk.Frame(self.main_canvas, bg='black')
+        container.pack()
+
+        tk.Label(
+            container,
+            text='Select data source:',
+            fg='white',
+            bg='black',
+            font=(self.button_font[0], self.button_font[1], 'bold')
+        ).pack(pady=10)
+
+        tk.Button(
+            container,
+            text="Upload Excel File 📁",
+            bg='#A3CFA4',
+            font=self.button_font,
+            width=30,
+            command=lambda: self.load_data(start_mode=True)
+        ).pack(pady=5)
+
+        tk.Button(
+            container,
+            text="Load from Save File 💾",
+            bg='#FFF3BD',
+            font=self.button_font,
+            width=30,
+            command=self.load_data
+        ).pack(pady=5)
+
+        self.first_time = True
+
+
 if __name__ == "__main__":
-    app = App()
+    App()
