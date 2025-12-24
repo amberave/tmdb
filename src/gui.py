@@ -4,8 +4,8 @@ import threading
 import os
 import pandas as pd
 
-from request_movie_site_data import get_letterboxd_user_ratings, setup_apis
-from get_movie_info import get_movie_info, load_movie_data, add_new_letterboxd_entries, save_progress
+from src.request_movie_site_data import get_letterboxd_user_ratings, setup_apis
+from src.get_movie_info import get_movie_info, load_movie_data, add_new_letterboxd_entries, save_progress
 
 HEIGHT = 600
 WIDTH = 800
@@ -92,7 +92,7 @@ class App:
             daemon=True
         ).start()
 
-    def load_data_thread(self, start_mode=False, letterboxd_username="jigsaw4real"):
+    def load_data_thread(self, start_mode=False, letterboxd_username="DWynter10"):
         try:
             self.user_ratings = get_letterboxd_user_ratings(letterboxd_username)
 
@@ -101,12 +101,19 @@ class App:
                 if filename:
                     self.movie_data, self.filename = load_movie_data(start_mode=True, filepath=filename)
             else:
-                self.movie_data, self.filename = load_movie_data()
+                try:
+                    self.movie_data, self.filename = load_movie_data()
+                except FileNotFoundError:
+                    self.ws.after(0, self.no_save_file)
+
 
         except Exception as e:
             print("Error loading data:", e)
 
         self.ws.after(0, self.finish_loading)
+    
+    def no_save_file(self):
+        messagebox.showerror("No Save File", f"There is no save file for '{self.filename}'. Select 'Upload from Excel' to upload a dataset and create a save file.")
 
     def finish_loading(self):
         self.close_loading_screen()
@@ -296,7 +303,3 @@ class App:
         ).pack(pady=5)
 
         self.first_time = True
-
-
-if __name__ == "__main__":
-    App()

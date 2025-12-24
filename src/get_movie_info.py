@@ -4,7 +4,8 @@ import requests
 import math
 import os
 from tqdm import tqdm
-from request_movie_site_data import setup_apis, search_tmdb, retrieve_tmdb_data, search_imdb, scrape_rotten_tomatoes, get_letterboxd_user_ratings, get_letterboxd_movie_data, get_oscars_data
+from src.request_movie_site_data import setup_apis, search_tmdb, retrieve_tmdb_data, search_imdb, scrape_rotten_tomatoes, get_letterboxd_user_ratings, get_letterboxd_movie_data, get_oscars_data
+
 
 def load_movie_data(start_mode=False, filepath=None):
     filename = ''
@@ -52,7 +53,6 @@ def save_progress(filename, error_save_folder, movie_data, error_set):
         f.write(errors)
 
 def add_new_letterboxd_entries(movie_data, letterboxd_user_ratings):
-    print("\nLoading in your missing logged movies from Letterboxd...")
     available_slugs = [entry["Letterboxd Slug"] for entry in movie_data if 'Letterboxd Slug' in entry]
     missing_films = {slug: v for slug,v in letterboxd_user_ratings["movies"].items() if slug not in available_slugs}
     for film in missing_films:
@@ -66,7 +66,6 @@ def add_new_letterboxd_entries(movie_data, letterboxd_user_ratings):
         entry["Logged on Letterboxd"] = "Yes"
         entry["Decade"] = str(math.floor(entry["Year"] / 10) * 10) + 's'
         movie_data.append(entry)
-    print(f"You've watched {len(missing_films)} new properties since last upload: {', '.join([v['name'] for v in missing_films.values()])}\n")
     return movie_data, missing_films
 
 def get_movie_info(filename, letterboxd_user_ratings, movie_dict, error_set, skip_checked_entries=True):

@@ -38,8 +38,13 @@ Start Command Prompt by typing `'cmd'` + `Enter` into the File Explorer address 
 
 In Command Prompt, paste the below command:
 ```
-venv\Scripts\activate;python ./main.py
+venv\Scripts\activate
 ```
+then paste this:
+```
+python ./main.py
+```
+
 <small>*For subsequent calls of this command, press the up arrow then Enter.*</small>
 
 You will be asked to input a character:
