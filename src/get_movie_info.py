@@ -20,7 +20,7 @@ def load_movie_data(start_mode=False, filepath=None):
             raise FileNotFoundError(f"Error: There is no save file for '{filename}'. Check the filename and rerun the program if save file exists, else select 's' to start from beginning and filename will be generated.")
     else: # if 'update' mode - pull from save file
         filename = os.path.basename(filepath)
-        with open('src/last_filename', 'w') as f:
+        with open('src/last_filename.txt', 'w') as f:
             f.write(filename)
         # get excel data to read and use for search
         try:

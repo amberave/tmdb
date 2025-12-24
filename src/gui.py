@@ -222,7 +222,7 @@ class App:
 
     def add_main_menu(self, canvas):
         container = tk.Frame(canvas, bg='black')
-        container.pack(fill="both", expand=True)
+        container.pack(fill="both", expand=True, pady=10)
 
         buttons = [
             ("Get Latest Letterboxd Logs", self.print_lb_ratings, '#40bdf5', 30),
@@ -259,7 +259,7 @@ class App:
         title = tk.Label(
             self.main_canvas,
             text="CineFiles",
-            font=("Cooper Black", 40, 'bold'),
+            font=self.button_font,
             fg="red",
             image=self.icon,
             compound='top',

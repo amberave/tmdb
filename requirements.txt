@@ -4,4 +4,4 @@ Requests==2.31.0
 tmdbsimple==2.9.1
 tqdm==4.65.0
 openpyxl==3.1.5
-git+https://github.com/nmcassa/letterboxdpy.git#egg=letterboxdpy
+git+https://github.com/nmcassa/letterboxdpy.git@e0c96171337990435b5e4e7b897886a41322582a
