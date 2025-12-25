@@ -1,6 +1,6 @@
 # CineFiles
 
-<img src="assets/cinefiles_icon.png" alt="CineFiles logo" width="300" height="200">
+<img src="assets/cinefiles_icon.png" alt="CineFiles logo" width="300" height="300">
 
 This program reads in an Excel file, pulls data from sites:
 * The Movie Database (TMDB)
