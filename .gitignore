@@ -8,6 +8,7 @@ src/tmp/*
 input/*
 output/*
 src/tmp/*
+*/last_filename.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
