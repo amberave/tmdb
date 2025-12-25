@@ -8,6 +8,9 @@ from src.request_movie_site_data import setup_apis, search_tmdb, retrieve_tmdb_d
 
 
 def load_movie_data(start_mode=False, filepath=None):
+    if not os.path.exists('src/tmp'):
+        os.mkdir('src/tmp')
+    
     filename = ''
     if not start_mode:
         with open('src/last_filename.txt', 'r') as f:
