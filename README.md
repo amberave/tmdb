@@ -1,4 +1,6 @@
-# The Movie Database Automation
+# CineFiles
+
+<img src="assets/cinefiles_icon.png" alt="CineFiles logo" width="300" height="200">
 
 This program reads in an Excel file, pulls data from sites:
 * The Movie Database (TMDB)
@@ -18,7 +20,7 @@ Navigate to the folder where you want the program saved, start Command Prompt by
 
 In Command Prompt, paste the below command:
 ```
-git clone https://github.com/amberave/tmdb.git;cd tmdb;python -m venv venv\;venv\Scripts\activate;pip install -r requirements.txt
+git clone https://github.com/amberave/cinefiles.git;cd cinefiles;python -m venv venv\;venv\Scripts\activate;pip install -r requirements.txt
 ```
 1. Login to [The Movie Database](https://www.themoviedb.org/settings/api).
 2. Scroll to the bottom of the [API page](https://www.themoviedb.org/settings/api) and copy your API Key.
@@ -26,11 +28,8 @@ git clone https://github.com/amberave/tmdb.git;cd tmdb;python -m venv venv\;venv
 
 ## Usage
 
-### Source Data
-Ensure you have placed an Excel file in the `input` folder. The program will try and load `movies_database.xlsx`. If your file is not named this, you can rename it to `movies_database.xlsx` or change the value `filename` in `[main.py](main.py)`.
-
 ### Running Programs
-Open the folder `tmdb` (should contain `requirements.txt`).
+Open the folder `cinefiles` (should contain `requirements.txt`).
 
 Start Command Prompt by typing `'cmd'` + `Enter` into the File Explorer address bar:
 
@@ -51,16 +50,15 @@ You will be asked to input a character:
 
 | Input | Meaning |
 |--|--|
-| 's' | **Start** - program will restart from the very beginning, pulling from input spreadsheet and discarding any other existing data. If you haven't run the program before, run this first.|
-| 'u' | **Update** - if you've already pulled in data from a spreadsheet but only got halfway through, this will continue from where program last left off. If program completed and you just want to add new Letterboxd entries or attempt retrieval of missing data, select this.|
+| **Upload Excel File** | Program will restart from the very beginning, pulling from input spreadsheet and discarding any other existing data. If you haven't run the program before, run this first.|
+| **Load from Save File** | If you've already pulled in data from a spreadsheet but only got halfway through, this will continue from where program last left off. If program completed and you just want to add new Letterboxd entries or attempt retrieval of missing data, select this.|
 
 You will be asked to input another character:
 
 | Input | Meaning |
 |--|--|
-| 'c' | Run the program over all values and attempt to fill any blank fields |
-| Enter (nothing) | Skip all rows that have attempted data retrieval and only fill most recently added rows (with no program-generated data). <br>*This setting specifically tries to fill any rows with missing `Runtime (from Letterboxd)` data.*|
-
+| **Fill All Missing Data** | Run the program over all values and attempt to fill any blank fields |
+| **Fill Only New Entries** | Skip all rows that have attempted data retrieval and only fill most recently added rows (with no program-generated data). <br>*This setting specifically tries to fill any rows with missing `Runtime (from Letterboxd)` data.*|
 
 
 ### Output Data
